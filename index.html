@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>질적 연구방법론 사다리 타기 게임</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Noto Sans KR -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            touch-action: none;
+        }
+        /* Custom scrollbar for clean visual appearance */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+        }
+        .active-pulse {
+            animation: pulse-ring 2s infinite;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-indigo-700 via-indigo-800 to-slate-900 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-500/30 p-2.5 rounded-xl backdrop-blur-md border border-indigo-400/30">
+                    <i class="fa-solid fa-graduation-cap text-2xl text-indigo-200"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black tracking-tight flex items-center gap-2">
+                        질적 연구방법론 사다리 타기
+                        <span class="text-xs bg-indigo-500/40 text-indigo-200 font-medium px-2 py-0.5 rounded-full border border-indigo-400/30">6인용</span>
+                    </h1>
+                    <p class="text-xs text-indigo-200 font-light hidden sm:block">6가지 주요 질적 연구방법론을 재미있게 탐구하고 무작위로 매칭해보세요.</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button id="guideBtn" class="bg-slate-800/80 hover:bg-slate-700 text-indigo-200 hover:text-white border border-indigo-500/30 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span class="hidden md:inline">연구방법론 백과</span>
+                </button>
+                <button id="resetLadderBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-md hover:shadow-indigo-500/20">
+                    <i class="fa-solid fa-shuffle"></i>
+                    <span>사다리 재구성</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl w-full mx-auto px-4 py-6 flex-grow flex flex-col gap-6">
+
+        <!-- Control Bar & Instructions -->
+        <section class="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-slate-200/80 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-start gap-3 w-full md:w-auto">
+                <div class="bg-amber-100 text-amber-700 p-2 rounded-lg shrink-0 mt-0.5">
+                    <i class="fa-solid fa-lightbulb text-lg"></i>
+                </div>
+                <div class="text-sm">
+                    <h2 class="font-bold text-slate-900">사용 방법</h2>
+                    <p class="text-slate-600 leading-relaxed">
+                        상단의 참가자 이름을 수정한 후, <span class="font-semibold text-indigo-600">참가자 버튼</span>을 클릭하여 사다리를 타고 내려가세요. 
+                        오른쪽 하단 <span class="font-semibold text-indigo-600">"전체 결과 한 번에 보기"</span>로 전체 결과를 한눈에 확인할 수도 있습니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                <button id="revealAllBtn" class="w-full md:w-auto bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-md">
+                    <i class="fa-solid fa-play text-xs text-amber-400"></i>
+                    <span>전체 결과 한 번에 보기</span>
+                </button>
+                <button id="clearLinesBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2.5 rounded-xl text-sm font-medium transition" title="선 지우기">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Game Arena -->
+        <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-4 sm:p-6 md:p-8 flex flex-col gap-4 relative overflow-hidden">
+            
+            <!-- Top Participants Inputs Header -->
+            <div class="grid grid-cols-6 gap-1 sm:gap-3 text-center z-10" id="participantHeader">
+                <!-- Dynamic generation via JS -->
+            </div>
+
+            <!-- Canvas Ladder Area -->
+            <div class="canvas-container my-2 flex justify-center bg-slate-50/50 rounded-xl p-2 border border-slate-100">
+                <canvas id="ladderCanvas" class="w-full cursor-pointer rounded-lg" height="480"></canvas>
+            </div>
+
+            <!-- Bottom Methodologies Destinations -->
+            <div class="grid grid-cols-6 gap-1 sm:gap-3 text-center z-10" id="methodologyFooter">
+                <!-- Dynamic generation via JS -->
+            </div>
+
+        </section>
+
+        <!-- Match Results List & Methodology Detail Card -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Result List (Left 1 col) -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-indigo-600"></i>
+                        매칭 결과 리스트
+                    </h3>
+                    <span id="completedCount" class="text-xs bg-indigo-100 text-indigo-700 font-semibold px-2.5 py-1 rounded-full">0 / 6 완료</span>
+                </div>
+
+                <div id="resultsList" class="flex flex-col gap-2.5 min-h-[220px]">
+                    <div class="h-full flex flex-col items-center justify-center text-slate-400 py-10 text-center">
+                        <i class="fa-regular fa-compass text-3xl mb-2 opacity-50"></i>
+                        <p class="text-sm">참가자 이름을 클릭하여<br>사다리를 출발시켜 보세요!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Methodology Detailed Info Card (Right 2 cols) -->
+            <div class="lg:col-span-2 bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-book-bookmark text-indigo-600"></i>
+                        <span id="detailCardTitle">연구방법론 상세 설명</span>
+                    </h3>
+                    <span class="text-xs text-slate-400">결과를 클릭하면 자세한 해설이 표시됩니다</span>
+                </div>
+
+                <div id="methodologyDetailContent" class="flex-grow flex flex-col justify-center">
+                    <div class="text-center text-slate-400 py-12">
+                        <div class="inline-flex p-4 bg-indigo-50 text-indigo-500 rounded-2xl mb-3">
+                            <i class="fa-solid fa-microscope text-3xl"></i>
+                        </div>
+                        <h4 class="text-base font-semibold text-slate-700 mb-1">연구방법론 가이드가 준비되어 있습니다</h4>
+                        <p class="text-sm text-slate-500 max-w-md mx-auto">
+                            사다리 결과를 확인하거나 아래에서 궁금한 질적 연구방법론을 선택하면 해당 연구법의 정의, 핵심 질문, 연구 주제 예시를 확인할 수 있습니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 text-center text-xs mt-8">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <p>질적 연구방법론 사다리 타기 도구 &copy; 2026. Academic Learning Suite.</p>
+            <div class="flex gap-4">
+                <span class="hover:text-slate-300 transition">실행연구</span>
+                <span class="hover:text-slate-300 transition">내러티브</span>
+                <span class="hover:text-slate-300 transition">현상학</span>
+                <span class="hover:text-slate-300 transition">근거이론</span>
+                <span class="hover:text-slate-300 transition">사례연구</span>
+                <span class="hover:text-slate-300 transition">문화기술지</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Encyclopedia Guide Modal -->
+    <div id="guideModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300" id="guideModalContent">
+            <!-- Modal Header -->
+            <div class="bg-slate-900 text-white p-5 flex justify-between items-center border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-600 p-2 rounded-xl text-white">
+                        <i class="fa-solid fa-book text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">6대 질적 연구방법론 핵심 요약</h3>
+                        <p class="text-xs text-slate-400">질적 연구 설계를 위한 각 방법론별 특성 비교</p>
+                    </div>
+                </div>
+                <button id="closeGuideModal" class="text-slate-400 hover:text-white p-2 rounded-lg text-lg transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto flex-grow space-y-6" id="modalMethodList">
+                <!-- Inserted dynamically via JS -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+                <button id="modalCloseBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl font-medium text-sm transition">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Data Store: Qualitative Research Methodologies Database
+        const METHODOLOGIES = {
+            '실행연구': {
+                id: 'action',
+                name: '실행연구',
+                english: 'Action Research',
+                color: '#ec4899', // Pink
+                bgClass: 'bg-pink-50 border-pink-200 text-pink-700',
+                badgeClass: 'bg-pink-500 text-white',
+                icon: 'fa-solid fa-arrows-spin',
+                summary: '연구자가 현장의 문제를 해결하고 실천을 개선하기 위해 실행과 성찰을 반복하는 연구',
+                keyFocus: '현장 실천 개선, 문제 해결, 연구자와 현장 참여자의 협력, 실행-성찰 순환',
+                keyQuestion: '우리 현장의 이 문제를 어떻게 개선하고 해결할 수 있는가?',
+                sampleTopics: [
+                    '초등 학급 내 사공간 활용이 학생들의 자율성에 미치는 영향과 실행 개선',
+                    '간호사의 근무 교대 피로도 경감을 위한 현장 맞춤형 프로그램 개발 및 평가',
+                    '대학 강의에서 거꾸로 학습(Flipped Learning) 적용을 통한 수업 개선 과정'
+                ]
+            },
+            '내러티브연구': {
+                id: 'narrative',
+                name: '내러티브연구',
+                english: 'Narrative Inquiry',
+                color: '#f59e0b', // Amber
+                bgClass: 'bg-amber-50 border-amber-200 text-amber-700',
+                badgeClass: 'bg-amber-500 text-white',
+                icon: 'fa-solid fa-book-open-reader',
+                summary: '개인의 삶의 경험과 생애 이야기를 시공간적 맥락 속에서 수집하여 의미를 재구성하는 연구',
+                keyFocus: '개인의 삶의 이야기, 시간성(과거-현재-미래), 사회적 맥락, 연구자와 참여자의 관계성',
+                keyQuestion: '이 사람의 삶의 경험과 이야기는 어떤 의미를 갖는가?',
+                sampleTopics: [
+                    '경력단절 여성의 재취업과 구직 과정에서의 삶의 이야기 연구',
+                    '특수교사로 살아온 20년의 생애사와 정체성 형성 과정 탐구',
+                    '다문화 가정 청소년의 학교 적응 및 성장에 관한 내러티브 탐구'
+                ]
+            },
+            '현상학적연구': {
+                id: 'phenomenology',
+                name: '현상학적연구',
+                english: 'Phenomenological Research',
+                color: '#6366f1', // Indigo
+                bgClass: 'bg-indigo-50 border-indigo-200 text-indigo-700',
+                badgeClass: 'bg-indigo-600 text-white',
+                icon: 'fa-solid fa-lightbulb',
+                summary: '어떤 현상이나 경험에 대해 여러 개인이 공통으로 겪은 체험의 본질과 의미를 탐구하는 연구',
+                keyFocus: '체험된 경험(lived experience), 경험의 본질(essence), 의식의 지향성, 판단중지(Epoché)',
+                keyQuestion: '이 현상을 직접 경험한다는 것은 어떠한 본질적 의미인가?',
+                sampleTopics: [
+                    '응급실 간호사가 경험하는 감정노동의 본질에 대한 현상학적 연구',
+                    '번아웃을 극복한 중견 기업인의 경험에 관한 현상학적 탐구',
+                    '비대면 수시 입시를 경험한 수험생들의 체험적 의미 분석'
+                ]
+            },
+            '근거이론연구': {
+                id: 'grounded',
+                name: '근거이론연구',
+                english: 'Grounded Theory',
+                color: '#10b981', // Emerald
+                bgClass: 'bg-emerald-50 border-emerald-200 text-emerald-700',
+                badgeClass: 'bg-emerald-600 text-white',
+                icon: 'fa-solid fa-diagram-project',
+                summary: '수집된 실제 자료로부터 귀납적으로 이론이나 과정 모델을 도출해내는 연구',
+                keyFocus: '귀납적 이론 도출, 개방/축/선택 코딩, 지속적 비교 분석, 이론적 Saturation(포화)',
+                keyQuestion: '이 행동이나 과정은 어떤 패러다임적 요인과 단계로 설명되는가?',
+                sampleTopics: [
+                    '스타트업 창업가들의 위기 극복 및 의사결정 과정에 대한 근거이론 접근',
+                    '만성 질환 환자의 Self-care 적응 패러다임 모델 구축',
+                    '신입 사원의 조직 적응 과정 및 상호작용 이론 모형 개발'
+                ]
+            },
+            '사례연구': {
+                id: 'case',
+                name: '사례연구',
+                english: 'Case Study',
+                color: '#06b6d4', // Cyan
+                bgClass: 'bg-cyan-50 border-cyan-200 text-cyan-700',
+                badgeClass: 'bg-cyan-600 text-white',
+                icon: 'fa-solid fa-magnifying-glass-chart',
+                summary: '특정한 한정된 시스템(특정 인물, 기관, 사건, 프로그램)을 심층적·다각적으로 분석하는 연구',
+                keyFocus: '경계 지워진 시스템(bounded system), 다각적 자료수집(인터뷰, 문서, 관찰), 심층적 맥락 분석',
+                keyQuestion: '이 특정한 사례 내에서 무엇이 일어나고 있으며 왜 그러한가?',
+                sampleTopics: [
+                    '혁신학교 운영 성공 사례에 대한 심층 사례연구',
+                    '지역 사회 소셜 벤처 기업 A사의 성장 과정과 브랜드 구축 사례 분석',
+                    '특정 희귀질환 환자 모임 커뮤니티의 형성 및 운영 사례 탐구'
+                ]
+            },
+            '문화기술지연구': {
+                id: 'ethnography',
+                name: '문화기술지연구',
+                english: 'Ethnography',
+                color: '#8b5cf6', // Violet
+                bgClass: 'bg-violet-50 border-violet-200 text-violet-700',
+                badgeClass: 'bg-violet-600 text-white',
+                icon: 'fa-solid fa-people-group',
+                summary: '특정 문화 공유 집단의 가치, 언어, 행동 패턴 및 상호작용을 장기간 현장참여 관찰하는 연구',
+                keyFocus: '문화적 심층 묘사(Thick Description), 참여관찰, 현지인 시각(Emic)과 연구자 시각(Etic)',
+                keyQuestion: '이 문화 집단 구성원들의 공유된 문화적 행동과 의미는 무엇인가?',
+                sampleTopics: [
+                    'E-스포츠 프로게임단 청소년 선수들의 일상과 가상/현실 문화기술지',
+                    '전통시장 상인 공동체의 언어 및 상거래 문화에 관한 장기 참여관찰 연구',
+                    'IT 개발자 커뮤니티의 협업 방식과 그들만의 공유 가치 문화 분석'
+                ]
+            }
+        };
+
+        // Standard 6 Methodology Names
+        const DEFAULT_METHODS = [
+            '실행연구',
+            '내러티브연구',
+            '현상학적연구',
+            '근거이론연구',
+            '사례연구',
+            '문화기술지연구'
+        ];
+
+        // Participant colors
+        const PARTICIPANT_COLORS = [
+            '#ef4444', // Red
+            '#f59e0b', // Amber
+            '#10b981', // Emerald
+            '#06b6d4', // Cyan
+            '#6366f1', // Indigo
+            '#8b5cf6'  // Violet
+        ];
+
+        // 2. State Variables
+        let participants = ['참가자 1', '참가자 2', '참가자 3', '참가자 4', '참가자 5', '참가자 6'];
+        let methodologies = [...DEFAULT_METHODS]; // Bottom destinations
+        let ladderData = []; // Matrix of horizontal rungs
+        let numCols = 6;
+        let numRows = 12; // Rung level slots
+        let paths = []; // Computed paths for each participant column: array of [{x, y}, ...]
+        let matchedResults = {}; // { participantIdx: methodologyName }
+        let completedPaths = new Set(); // indices of completed runs
+        let isAnimating = false;
+
+        // Canvas element setup
+        const canvas = document.getElementById('ladderCanvas');
+        const ctx = canvas.getContext('2d');
+
+        /**
+         * Generate Random Rungs for the Ladder
+         */
+        function generateLadder() {
+            ladderData = [];
+            for (let r = 0; r < numRows; r++) {
+                ladderData[r] = new Array(numCols - 1).fill(false);
+            }
+
+            // Create balanced horizontal rungs
+            for (let r = 0; r < numRows; r++) {
+                for (let c = 0; c < numCols - 1; c++) {
+                    // Avoid adjacent horizontal lines on the same row to prevent deadlocks
+                    const leftNeighbor = c > 0 ? ladderData[r][c - 1] : false;
+                    if (!leftNeighbor) {
+                        // 35% probability of drawing a rung
+                        if (Math.random() < 0.38) {
+                            ladderData[r][c] = true;
+                        }
+                    }
+                }
+            }
+
+            // Ensure every column has at least 2 rungs connected
+            for (let c = 0; c < numCols - 1; c++) {
+                let hasRung = false;
+                for (let r = 0; r < numRows; r++) {
+                    if (ladderData[r][c]) {
+                        hasRung = true;
+                        break;
+                    }
+                }
+                if (!hasRung) {
+                    const randomRow = Math.floor(Math.random() * numRows);
+                    // Clear neighbors
+                    if (c > 0) ladderData[randomRow][c - 1] = false;
+                    if (c < numCols - 2) ladderData[randomRow][c + 1] = false;
+                    ladderData[randomRow][c] = true;
+                }
+            }
+
+            // Compute path trace coordinates for all starting columns
+            computeAllPaths();
+        }
+
+        /**
+         * Shuffle methodologies array for random assignment destinations
+         */
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        /**
+         * Calculate precise 2D path coordinates down the ladder for each starting column
+         */
+        function computeAllPaths() {
+            paths = [];
+            matchedResults = {};
+
+            const rect = canvas.getBoundingClientRect();
+            const width = canvas.width;
+            const height = canvas.height;
+
+            const paddingX = width / (numCols * 2);
+            const colWidth = (width - paddingX * 2) / (numCols - 1);
+            const rowHeight = (height - 40) / (numRows + 1);
+            const startY = 20;
+
+            for (let startCol = 0; startCol < numCols; startCol++) {
+                let currentCol = startCol;
+                let pointList = [];
+
+                // Top starting point
+                let currentX = paddingX + currentCol * colWidth;
+                let currentY = startY;
+                pointList.push({ x: currentX, y: currentY });
+
+                for (let r = 0; r < numRows; r++) {
+                    const rungY = startY + (r + 1) * rowHeight;
+                    
+                    // Move down to rung level
+                    pointList.push({ x: currentX, y: rungY });
+
+                    // Check right rung
+                    if (currentCol < numCols - 1 && ladderData[r][currentCol]) {
+                        currentCol++;
+                        currentX = paddingX + currentCol * colWidth;
+                        pointList.push({ x: currentX, y: rungY });
+                    } 
+                    // Check left rung
+                    else if (currentCol > 0 && ladderData[r][currentCol - 1]) {
+                        currentCol--;
+                        currentX = paddingX + currentCol * colWidth;
+                        pointList.push({ x: currentX, y: rungY });
+                    }
+                }
+
+                // Move down to bottom
+                pointList.push({ x: currentX, y: height - startY });
+                paths.push(pointList);
+
+                // Matched methodology
+                const endCol = currentCol;
+                matchedResults[startCol] = methodologies[endCol];
+            }
+        }
+
+        /**
+         * Resize canvas for crisp resolution on high-DPI displays
+         */
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const displayWidth = container.clientWidth - 16;
+            const displayHeight = 440; // fixed height
+
+            canvas.style.width = displayWidth + 'px';
+            canvas.style.height = displayHeight + 'px';
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = displayWidth * dpr;
+            canvas.height = displayHeight * dpr;
+
+            ctx.scale(dpr, dpr);
+            computeAllPaths();
+            drawLadder();
+        }
+
+        /**
+         * Render the base ladder background and completed animated lines
+         */
+        function drawLadder() {
+            const width = canvas.width / (window.devicePixelRatio || 1);
+            const height = canvas.height / (window.devicePixelRatio || 1);
+
+            ctx.clearRect(0, 0, width, height);
+
+            const paddingX = width / (numCols * 2);
+            const colWidth = (width - paddingX * 2) / (numCols - 1);
+            const rowHeight = (height - 40) / (numRows + 1);
+            const startY = 20;
+
+            // Draw vertical main columns
+            ctx.strokeStyle = '#cbd5e1'; // Tailwind Slate 300
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+
+            for (let c = 0; c < numCols; c++) {
+                const x = paddingX + c * colWidth;
+                ctx.beginPath();
+                ctx.moveTo(x, startY);
+                ctx.lineTo(x, height - startY);
+                ctx.stroke();
+            }
+
+            // Draw horizontal rungs
+            ctx.strokeStyle = '#94a3b8'; // Tailwind Slate 400
+            ctx.lineWidth = 4;
+
+            for (let r = 0; r < numRows; r++) {
+                const y = startY + (r + 1) * rowHeight;
+                for (let c = 0; c < numCols - 1; c++) {
+                    if (ladderData[r][c]) {
+                        const x1 = paddingX + c * colWidth;
+                        const x2 = paddingX + (c + 1) * colWidth;
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y);
+                        ctx.lineTo(x2, y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw already completed paths
+            completedPaths.forEach(colIdx => {
+                drawPathLine(paths[colIdx], PARTICIPANT_COLORS[colIdx], 1.0);
+            });
+        }
+
+        /**
+         * Draw a path given points array
+         */
+        function drawPathLine(points, color, progress = 1.0) {
+            if (!points || points.length < 2) return;
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 7;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            // Total distance calculation for linear interpolation
+            let totalDist = 0;
+            const segments = [];
+            for (let i = 0; i < points.length - 1; i++) {
+                const dx = points[i+1].x - points[i].x;
+                const dy = points[i+1].y - points[i].y;
+                const dist = Math.hypot(dx, dy);
+                segments.push({ p1: points[i], p2: points[i+1], dist });
+                totalDist += dist;
+            }
+
+            let targetDist = totalDist * progress;
+            let currentDist = 0;
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+
+            for (let seg of segments) {
+                if (currentDist + seg.dist <= targetDist) {
+                    ctx.lineTo(seg.p2.x, seg.p2.y);
+                    currentDist += seg.dist;
+                } else {
+                    const remaining = targetDist - currentDist;
+                    const ratio = remaining / seg.dist;
+                    const targetX = seg.p1.x + (seg.p2.x - seg.p1.x) * ratio;
+                    const targetY = seg.p1.y + (seg.p2.y - seg.p1.y) * ratio;
+                    ctx.lineTo(targetX, targetY);
+
+                    // Draw glowing head dot
+                    ctx.stroke();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(targetX, targetY, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    return;
+                }
+            }
+            ctx.stroke();
+        }
+
+        /**
+         * Animate a single column ladder traversal
+         */
+        function animatePath(colIdx, onComplete = null) {
+            if (isAnimating && !onComplete) return;
+
+            const path = paths[colIdx];
+            const color = PARTICIPANT_COLORS[colIdx];
+            let startTime = null;
+            const duration = 1600; // ms per path
+
+            isAnimating = true;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                const progress = Math.min(elapsed / duration, 1.0);
+
+                // Redraw canvas
+                drawLadder();
+                // Draw current active animated line
+                drawPathLine(path, color, progress);
+
+                if (progress < 1.0) {
+                    requestAnimationFrame(step);
+                } else {
+                    completedPaths.add(colIdx);
+                    drawLadder();
+                    isAnimating = false;
+                    
+                    updateResultsUI();
+                    highlightMatchedMethodology(colIdx);
+
+                    if (onComplete) onComplete();
+                }
+            }
+
+            requestAnimationFrame(step);
+        }
+
+        /**
+         * Reveal all paths sequentially
+         */
+        function animateAllPaths() {
+            if (isAnimating) return;
+            
+            let current = 0;
+            function runNext() {
+                if (current < numCols) {
+                    const idx = current;
+                    current++;
+                    animatePath(idx, runNext);
+                }
+            }
+            runNext();
+        }
+
+        /**
+         * Render Top Participant Header Buttons / Inputs
+         */
+        function renderHeaderUI() {
+            const container = document.getElementById('participantHeader');
+            container.innerHTML = '';
+
+            participants.forEach((name, idx) => {
+                const color = PARTICIPANT_COLORS[idx];
+                const isCompleted = completedPaths.has(idx);
+
+                const colDiv = document.createElement('div');
+                colDiv.className = 'flex flex-col items-center gap-1.5';
+
+                colDiv.innerHTML = `
+                    <button data-col="${idx}" class="p-btn w-full py-2.5 px-1.5 rounded-xl font-bold text-xs sm:text-sm text-white shadow-md transition transform active:scale-95 flex flex-col items-center justify-center gap-1 border border-white/20 hover:brightness-110 ${isCompleted ? 'ring-2 ring-offset-2 ring-slate-800' : ''}" style="background-color: ${color}">
+                        <i class="fa-solid fa-user-graduate text-xs"></i>
+                        <span class="truncate max-w-full">${idx + 1}번</span>
+                    </button>
+                    <input type="text" value="${name}" data-idx="${idx}" class="p-input w-full text-center text-xs font-medium border border-slate-200 rounded-lg py-1 px-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-inner" placeholder="이름 입력">
+                `;
+
+                container.appendChild(colDiv);
+            });
+
+            // Event listeners for top buttons
+            document.querySelectorAll('.p-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const colIdx = parseInt(e.currentTarget.getAttribute('data-col'));
+                    animatePath(colIdx);
+                });
+            });
+
+            // Event listeners for name inputs
+            document.querySelectorAll('.p-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const idx = parseInt(e.target.getAttribute('data-idx'));
+                    participants[idx] = e.target.value || `참가자 ${idx + 1}`;
+                    updateResultsUI();
+                });
+            });
+        }
+
+        /**
+         * Render Bottom Methodology Cards
+         */
+        function renderFooterUI() {
+            const container = document.getElementById('methodologyFooter');
+            container.innerHTML = '';
+
+            methodologies.forEach((methodName, idx) => {
+                const item = METHODOLOGIES[methodName];
+                const colDiv = document.createElement('div');
+                colDiv.className = 'flex flex-col items-center';
+
+                colDiv.innerHTML = `
+                    <div data-method="${methodName}" class="method-card w-full p-2 sm:p-3 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-indigo-300 min-h-[76px]">
+                        <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs ${item.badgeClass}">
+                            <i class="${item.icon}"></i>
+                        </div>
+                        <span class="text-xs font-bold text-slate-800 truncate max-w-full">${methodName}</span>
+                    </div>
+                `;
+
+                container.appendChild(colDiv);
+            });
+
+            // Add click events to methodology cards for quick reference viewing
+            document.querySelectorAll('.method-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    const method = e.currentTarget.getAttribute('data-method');
+                    showMethodologyDetail(method);
+                });
+            });
+        }
+
+        /**
+         * Update Match Results List
+         */
+        function updateResultsUI() {
+            const resultsList = document.getElementById('resultsList');
+            const completedCount = document.getElementById('completedCount');
+            
+            completedCount.textContent = `${completedPaths.size} / ${numCols} 완료`;
+
+            if (completedPaths.size === 0) {
+                resultsList.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-slate-400 py-10 text-center">
+                        <i class="fa-regular fa-compass text-3xl mb-2 opacity-50"></i>
+                        <p class="text-sm">참가자 버튼을 클릭하여<br>사다리를 출발시켜 보세요!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            resultsList.innerHTML = '';
+            
+            // Sort completed paths by column index
+            const sortedIndices = Array.from(completedPaths).sort((a, b) => a - b);
+
+            sortedIndices.forEach(colIdx => {
+                const participantName = participants[colIdx] || `참가자 ${colIdx + 1}`;
+                const matchedMethod = matchedResults[colIdx];
+                const methodInfo = METHODOLOGIES[matchedMethod];
+                const color = PARTICIPANT_COLORS[colIdx];
+
+                const card = document.createElement('div');
+                card.className = 'p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white hover:border-indigo-300 transition cursor-pointer flex items-center justify-between shadow-xs group';
+                
+                card.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-3 h-8 rounded-full shrink-0" style="background-color: ${color}"></span>
+                        <div>
+                            <span class="text-xs font-bold text-slate-500">${colIdx + 1}번 - ${participantName}</span>
+                            <h4 class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
+                                ${matchedMethod}
+                                <span class="text-[10px] font-normal text-slate-400">(${methodInfo.english})</span>
+                            </h4>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-indigo-500 transition"></i>
+                `;
+
+                card.addEventListener('click', () => {
+                    showMethodologyDetail(matchedMethod, participantName);
+                });
+
+                resultsList.appendChild(card);
+            });
+        }
+
+        /**
+         * Automatically trigger detail view for matched participant
+         */
+        function highlightMatchedMethodology(colIdx) {
+            const participantName = participants[colIdx] || `참가자 ${colIdx + 1}`;
+            const matchedMethod = matchedResults[colIdx];
+            showMethodologyDetail(matchedMethod, participantName);
+        }
+
+        /**
+         * Display Methodology Detailed Explanation in the Right Panel
+         */
+        function showMethodologyDetail(methodName, matchedParticipant = null) {
+            const item = METHODOLOGIES[methodName];
+            if (!item) return;
+
+            const container = document.getElementById('methodologyDetailContent');
+            const cardTitle = document.getElementById('detailCardTitle');
+
+            cardTitle.textContent = `${item.name} (${item.english})`;
+
+            let matchedBanner = '';
+            if (matchedParticipant) {
+                matchedBanner = `
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check text-indigo-600"></i>
+                            <span class="text-xs text-indigo-900 font-medium"><strong>${matchedParticipant}</strong> 님의 매칭 연구방법론</span>
+                        </div>
+                        <span class="text-xs font-bold ${item.badgeClass} px-2.5 py-0.5 rounded-full">${item.name}</span>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                ${matchedBanner}
+                <div class="space-y-4">
+                    <!-- Concept Summary -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h5 class="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-quote-left"></i> 정의 및 핵심 목표
+                        </h5>
+                        <p class="text-sm text-slate-800 font-medium leading-relaxed">${item.summary}</p>
+                    </div>
+
+                    <!-- Key Features & Main Question -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                            <span class="text-xs font-bold text-slate-500 block mb-1">🔍 핵심 키워드 & 포커스</span>
+                            <p class="text-xs text-slate-700 leading-relaxed">${item.keyFocus}</p>
+                        </div>
+                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                            <span class="text-xs font-bold text-slate-500 block mb-1">❓ 대표 연구 질문 예시</span>
+                            <p class="text-xs text-slate-700 italic font-medium">"${item.keyQuestion}"</p>
+                        </div>
+                    </div>
+
+                    <!-- Recommended Topics -->
+                    <div>
+                        <h5 class="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-folder-open text-amber-500"></i> 추천 논문 주제 예시
+                        </h5>
+                        <ul class="space-y-1.5">
+                            ${item.sampleTopics.map(topic => `
+                                <li class="text-xs text-slate-600 bg-white border border-slate-200 rounded-lg p-2.5 flex items-start gap-2 shadow-2xs">
+                                    <i class="fa-solid fa-check text-indigo-500 mt-0.5 text-[10px]"></i>
+                                    <span>${topic}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Populate Encyclopedia Modal with all 6 methodologies
+         */
+        function populateModalGuide() {
+            const container = document.getElementById('modalMethodList');
+            container.innerHTML = '';
+
+            Object.values(METHODOLOGIES).forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'border border-slate-200 rounded-2xl p-4 bg-slate-50/50 space-y-3';
+
+                itemEl.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl ${item.badgeClass} flex items-center justify-center text-sm shadow-xs">
+                                <i class="${item.icon}"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-slate-900 text-base">${item.name}</h4>
+                                <span class="text-xs text-slate-400 font-mono">${item.english}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-slate-700 leading-relaxed font-medium">${item.summary}</p>
+
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5">
+                        <div class="text-xs"><strong class="text-slate-800">핵심 관점:</strong> <span class="text-slate-600">${item.keyFocus}</span></div>
+                        <div class="text-xs"><strong class="text-slate-800">연구 질문:</strong> <span class="text-indigo-600 italic">"${item.keyQuestion}"</span></div>
+                    </div>
+                `;
+
+                container.appendChild(itemEl);
+            });
+        }
+
+        /**
+         * Set up all button click handlers and modal triggers
+         */
+        function setupEventListeners() {
+            // Re-shuffle Ladder
+            document.getElementById('resetLadderBtn').addEventListener('click', () => {
+                completedPaths.clear();
+                shuffleArray(methodologies);
+                generateLadder();
+                renderFooterUI();
+                drawLadder();
+                updateResultsUI();
+            });
+
+            // Reveal All
+            document.getElementById('revealAllBtn').addEventListener('click', () => {
+                animateAllPaths();
+            });
+
+            // Clear Path Lines
+            document.getElementById('clearLinesBtn').addEventListener('click', () => {
+                completedPaths.clear();
+                drawLadder();
+                updateResultsUI();
+            });
+
+            // Encyclopedia Modal Triggers
+            const modal = document.getElementById('guideModal');
+            const modalContent = document.getElementById('guideModalContent');
+
+            const openModal = () => {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            };
+
+            const closeModal = () => {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modalContent.classList.remove('scale-100');
+                modalContent.classList.add('scale-95');
+            };
+
+            document.getElementById('guideBtn').addEventListener('click', openModal);
+            document.getElementById('closeGuideModal').addEventListener('click', closeModal);
+            document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+
+            // Window resize handler
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+            });
+        }
+
+        /**
+         * Initialize App on Page Load
+         */
+        window.onload = function () {
+            shuffleArray(methodologies);
+            renderHeaderUI();
+            renderFooterUI();
+            populateModalGuide();
+            setupEventListeners();
+            
+            // Wait for element rendering before computing canvas size
+            setTimeout(() => {
+                generateLadder();
+                resizeCanvas();
+            }, 50);
+        };
+    </script>
+</body>
+</html>
